@@ -60,7 +60,7 @@ jobs:
     - name: Build and Push Docker Image
       run: |
         cd snack
-        docker buildx build --no-cache --platform linux/arm64 -f Dockerfile -t ${{ env.DOCKER_IMAGE }} --push .
+        docker buildx build --no-cache -f Dockerfile -t ${{ env.DOCKER_IMAGE }} --push .
 
   deploy:
     needs: build
