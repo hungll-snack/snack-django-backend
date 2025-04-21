@@ -76,8 +76,8 @@ class KakaoOauthController(viewsets.ViewSet):
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
                 response['usertoken'] = userToken
-                response['account_id'] = account.id
-                response["Access-Control-Expose-Headers"] = "usertoken,account_id"
+                response['account-id'] = account.id
+                response["Access-Control-Expose-Headers"] = "usertoken,account-id"
                 return response
 
         except Exception as e:
@@ -118,13 +118,16 @@ class KakaoOauthController(viewsets.ViewSet):
                       <body>
                         <script>
                           const userToken = '{userToken}';
-                          window.location.href = 'flutter://kakao-login-success?userToken=' + userToken;
+                          const email = '{email}';
+                          const nickname = '{nickname}';
+                          window.location.href = 'flutter://kakao-login-success?userToken=' + encodeURIComponent(userToken) + '&email=' + encodeURIComponent(email) + '&nickname=' + encodeURIComponent(nickname);
                         </script>
                       </body>
                     </html>
                 """)
 
         except Exception as e:
+            print(f"[KAKAO] Error: {str(e)}")
             return JsonResponse({'error': str(e)}, status=500)
 
 
@@ -176,8 +179,8 @@ class KakaoOauthController(viewsets.ViewSet):
 
                 response = JsonResponse({'message': 'login_status_ok'}, status=status.HTTP_201_CREATED if is_new_account else status.HTTP_200_OK)
                 response['userToken'] = userToken
-                response['account_id'] = account.id
-                response["Access-Control-Expose-Headers"] = "usertoken,account_id"
+                response['account-id'] = account.id
+                response["Access-Control-Expose-Headers"] = "usertoken,account-id"
                 return response
 
         except Exception as e:

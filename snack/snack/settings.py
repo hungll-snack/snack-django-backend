@@ -100,10 +100,10 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-request-with',
     'usertoken',
-    'account_id',
+    'account-id',
 ]
 
-CORS_EXPOSE_HEADERS = ['usertoken', 'account_id', 'authorization']
+CORS_EXPOSE_HEADERS = ['usertoken', 'account-id', 'authorization']
 
 KAKAO = {
     'LOGIN_URL': os.getenv('KAKAO_LOGIN_URL'),
@@ -128,6 +128,7 @@ GOOGLE = {
     'CLIENT_ID': os.getenv('GOOGLE_CLIENT_ID'),
     'CLIENT_SECRET': os.getenv('GOOGLE_CLIENT_SECRET'),
     'REDIRECT_URI': os.getenv('GOOGLE_REDIRECT_URI'),
+    'REDIRECT_URI_FOR_APP': os.getenv('GOOGLE_REDIRECT_URI'),
     'TOKEN_REQUEST_URI': os.getenv('GOOGLE_TOKEN_REQUEST_URI'),
     'USER_INFO_REQUEST_URI': os.getenv('GOOGLE_USER_INFO_REQUEST_URI'),
 }
