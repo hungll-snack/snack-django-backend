@@ -2,3 +2,5 @@
 It's for Snack Django Backend
 
 ㅁㄴㅇㄹ
+
+토큰 만료 처리
