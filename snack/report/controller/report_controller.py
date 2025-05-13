@@ -22,27 +22,53 @@ class ReportController(viewsets.ViewSet):
     redisCacheService = RedisCacheServiceImpl.getInstance()
 
 
-    def requestReport(self, request): # 신고 요청
+    def requestReport(self, request):   # 사용자 -신고 요청
         data = request.data
         user_token = request.headers.get("userToken")
         if not user_token:
             return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
-        account_id = self.redisCacheService.getValueByKey(user_token)
 
+        account_id = self.redisCacheService.getValueByKey(user_token)
         if not account_id:
             return JsonResponse({"error": "로그인이 필요합니다", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
 
-        target_id = data.get("target_id")
+        content_id = data.get("content_id")
         target_type = data.get("target_type")
         reason_type = data.get("reason_type")
 
-        if not target_id or not target_type or not reason_type:
+        if not content_id or not target_type or not reason_type:
             return JsonResponse({"error": "필수 항목이 누락되었습니다", "success": False}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             account = self.__accountService.findAccountById(account_id)
             if not account:
-                raise Exception("계정을 찾을 수 없습니다")
+                return JsonResponse({"error": "신고자의 계정을 찾을 수 없습니다", "success": False},
+                                    status=status.HTTP_404_NOT_FOUND)
+
+            # 신고 대상 확인
+            if target_type == "BOARD":
+                board = self.__boardService.findBoardById(content_id)
+                if not board:
+                    return JsonResponse({"error": "신고한 게시글을 찾을 수 없습니다", "success": False},
+                                        status=status.HTTP_404_NOT_FOUND)
+                target_id = board.author  # 게시글 작성자 ID
+
+            elif target_type == "COMMENT":
+                comment = self.__commentService.findCommentById(content_id)
+                if not comment:
+                    return JsonResponse({"error": "신고한 댓글을 찾을 수 없습니다", "success": False},
+                                        status=status.HTTP_404_NOT_FOUND)
+                target_id = comment.author  # 댓글 작성자 ID
+
+            else:
+                return JsonResponse({"error": "유효하지 않은 신고 대상 타입입니다", "success": False},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+            if not target_id:
+                return JsonResponse({
+                    "error": "신고 대상 사용자 ID를 확인할 수 없습니다",
+                    "success": False
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             report = self.__reportService.requestReport(
                 reporter=account,
@@ -61,7 +87,7 @@ class ReportController(viewsets.ViewSet):
             return JsonResponse({"error": str(e), "success": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-    def getReportDetail(self, request, request_id): # 관리자 -신고 상세보기
+    def getReportDetail(self, request, request_id):     # 관리자 -신고 상세보기
         user_token = request.headers.get("userToken")
         if not user_token:
             return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
@@ -96,7 +122,7 @@ class ReportController(viewsets.ViewSet):
         except Report.DoesNotExist:
             return JsonResponse({"error": "해당 신고를 찾을 수 없습니다", "success": False}, status=status.HTTP_404_NOT_FOUND)
 
-    def getReportsList(self, request):  # 관리자 -신고 리스트 가져오기
+    def getReportsList(self, request):    # 관리자 -신고 리스트 가져오기
         user_token = request.headers.get("userToken")
         if not user_token:
             return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)
@@ -106,7 +132,7 @@ class ReportController(viewsets.ViewSet):
             return JsonResponse({"error": "로그인이 필요합니다", "success": False}, status=status.HTTP_401_UNAUTHORIZED)
 
         account = self.__accountService.findAccountById(account_id)
-        if not account or account.role_type.role_type != 'ADMIN':  # comment 에서 is_admin 수정하기
+        if not account or account.role_type.role_type != 'ADMIN':       # comment 에서 is_admin 수정하기
             return JsonResponse({"error": "관리자 권한이 필요합니다", "success": False}, status=status.HTTP_403_FORBIDDEN)
 
         reports = self.__reportService.getAllReports()
@@ -132,7 +158,7 @@ class ReportController(viewsets.ViewSet):
         }, status=status.HTTP_200_OK)
 
 
-    def deleteReport(self, request, request_id):  # 관리자 -신고 삭제
+    def deleteReport(self, request, request_id):    # 관리자 -신고 삭제
         user_token = request.headers.get("userToken")
         if not user_token:
             return JsonResponse({"error": "userToken이 필요합니다", "success": False}, status=400)

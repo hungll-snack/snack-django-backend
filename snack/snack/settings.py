@@ -64,7 +64,15 @@ INSTALLED_APPS = [
     'report',
     #'mypage',
     'chat_history',
+    'account_scrap',
+    # 'django_crontab',
 ]
+
+
+# CRONJOBS = [
+#     ('0 0 * * *', 'account_management.management.commands.release_suspended_accounts.Command'),
+#     ('0 0 * * 0', 'account_management.management.commands.delete_expired_accounts.Command'),
+# ]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
