@@ -1,5 +1,7 @@
 from django.http import JsonResponse
 from rest_framework import status, viewsets
+
+from account_alarm.service.account_alarm_service_impl import AccountAlarmServiceImpl
 from board.service.board_service_impl import BoardServiceImpl
 from account_profile.entity.account_profile import AccountProfile
 from django.core.paginator import Paginator
@@ -15,11 +17,11 @@ class BoardController(viewsets.ViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     __boardService = BoardServiceImpl.getInstance()
     __accountService = AccountServiceImpl.getInstance()
+    __accountAlarmService = AccountAlarmServiceImpl.getInstance()
     __redisService = RedisCacheServiceImpl.getInstance()
 
     def createBoard(self, request):
         postRequest = request.data
-        # userToken = request.headers.get("userToken")
         userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
         account_id = self.__redisService.getValueByKey(userToken)
 
@@ -158,10 +160,14 @@ class BoardController(viewsets.ViewSet):
             queryset = queryset.filter(title__icontains=title)
 
         if author:
-            queryset = queryset.filter(author__account__nickname__icontains=author)
+            queryset = queryset.filter(author__account_nickname__icontains=author)
 
         if start_date and end_date:
             queryset = queryset.filter(end_time__range=[start_date, end_date])
+        elif start_date:
+            queryset = queryset.filter(end_time__gte=start_date)
+        elif end_date:
+            queryset = queryset.filter(end_time__range=[timezone.now().date(), end_date])
 
         if sort == "end_date":
             queryset = queryset.order_by('end_time')
@@ -194,6 +200,17 @@ class BoardController(viewsets.ViewSet):
     def deleteBoard(self, request, board_id):
         userToken = request.headers.get("Authorization", "").replace("Bearer ", "")
         deleted, status_code, message = self.__boardService.deleteBoardWithToken(board_id, userToken)
+
+        if deleted:
+            try:
+                self.__accountAlarmService.deleteBoardRelatedAlams(board_id)
+            except Exception as e:
+                print(f"[ERROR] 알림 삭제 중 오류 발생: {str(e)}")
+                return JsonResponse({
+                    "success": deleted,
+                    "message": message,
+                    "warning": "게시글 관련 알림 삭제 중 오류가 발생했습니다."
+                }, status=status_code)
 
         return JsonResponse({"success": deleted, "message": message}, status=status_code)
 

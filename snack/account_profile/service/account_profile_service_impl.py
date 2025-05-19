@@ -32,6 +32,9 @@ class AccountProfileServiceImpl(AccountProfileService):
         )
         return self.__repository.save(profile)
 
+    def getProfileObjectByAccountId(self, account_id: int):
+        return self.__repository.findByAccountProfileObject(account_id)
+
     def getProfileByAccountId(self, account_id: int) -> dict:
         """Account ID로 프로필을 찾는다."""
         return self.__repository.findByAccount(account_id)
@@ -76,4 +79,8 @@ class AccountProfileServiceImpl(AccountProfileService):
     def isNicknameAvailable(self, account_nickname: str) -> bool:
         return not AccountProfile.objects.filter(account_nickname=account_nickname).exists()
 
+    def updateBoardAlarmStatus(self, account_id: int, alarm_board_status: bool):
+        return self.__repository.saveBoardAlarmStatus(account_id, alarm_board_status)
 
+    def updateCommentAlarmStatus(self, account_id: int, alarm_comment_status: bool):
+        return self.__repository.saveCommentAlarmStatus(account_id, alarm_comment_status)
