@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 env:
   DOCKER_IMAGE: ghcr.io/${{ secrets.REAL_ACTOR }}/backend-deploy-server:latest
